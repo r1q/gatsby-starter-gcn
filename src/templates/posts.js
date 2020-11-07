@@ -3,38 +3,44 @@ import { graphql } from 'gatsby'
 import Layout from '../components/Layout'
 import CardList from '../components/CardList'
 import Card from '../components/Card'
-import Helmet from 'react-helmet'
 import Container from '../components/Container'
 import Pagination from '../components/Pagination'
 import SEO from '../components/SEO'
-import config from '../utils/siteConfig'
+import { startCase } from 'lodash'
 
-const Index = ({ data, pageContext }) => {
+const Posts = ({ data, pageContext }) => {
   const posts = data.allContentfulPost.edges
-  const featuredPost = posts[0].node
-  const { currentPage } = pageContext
-  const isFirstPage = currentPage === 1
+  const { humanPageNumber, basePath } = pageContext
+  const isFirstPage = humanPageNumber === 1
+  let featuredPost
+  let ogImage
+
+  try {
+    featuredPost = posts[0].node
+  } catch (error) {
+    featuredPost = null
+  }
+  try {
+    ogImage = posts[0].node.heroImage.ogimg.src
+  } catch (error) {
+    ogImage = null
+  }
 
   return (
     <Layout>
-      <SEO />
-      {!isFirstPage && (
-        <Helmet>
-          <title>{`${config.siteTitle} - Page ${currentPage}`}</title>
-        </Helmet>
-      )}
+      <SEO title={startCase(basePath)} image={ogImage} />
       <Container>
         {isFirstPage ? (
           <CardList>
-            <Card {...featuredPost} featured />
+            <Card {...featuredPost} featured basePath={basePath} />
             {posts.slice(1).map(({ node: post }) => (
-              <Card key={post.id} {...post} />
+              <Card key={post.id} {...post} basePath={basePath} />
             ))}
           </CardList>
         ) : (
           <CardList>
             {posts.map(({ node: post }) => (
-              <Card key={post.id} {...post} />
+              <Card key={post.id} {...post} basePath={basePath} />
             ))}
           </CardList>
         )}
@@ -62,6 +68,9 @@ export const query = graphql`
             fluid(maxWidth: 1800) {
               ...GatsbyContentfulFluid_withWebp_noBase64
             }
+            ogimg: resize(width: 1800) {
+              src
+            }
           }
           body {
             childMarkdownRemark {
@@ -76,4 +85,4 @@ export const query = graphql`
   }
 `
 
-export default Index
+export default Posts

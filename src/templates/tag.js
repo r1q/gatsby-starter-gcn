@@ -1,9 +1,8 @@
 import React from 'react'
 import { graphql } from 'gatsby'
-import orderBy from 'lodash/orderBy'
-import Helmet from 'react-helmet'
+import { startCase, orderBy } from 'lodash'
+import SEO from '../components/SEO'
 import moment from 'moment'
-import config from '../utils/siteConfig'
 import Layout from '../components/Layout'
 import Card from '../components/Card'
 import CardList from '../components/CardList'
@@ -19,50 +18,42 @@ const TagTemplate = ({ data, pageContext }) => {
     ['desc']
   )
 
-  const { title, slug } = data.contentfulTag
+  const { title } = data.contentfulTag
   const numberOfPosts = posts.length
   const skip = pageContext.skip
   const limit = pageContext.limit
-  const currentPage = pageContext.currentPage
-  const isFirstPage = currentPage === 1
+  const { humanPageNumber, basePath } = pageContext
+
+  let ogImage
+  try {
+    ogImage = posts[0].heroImage.ogimg.src
+  } catch (error) {
+    ogImage = null
+  }
 
   return (
-    <Layout>
-      {isFirstPage ? (
-        <Helmet>
-          <title>{`Tag: ${title} - ${config.siteTitle}`}</title>
-          <meta
-            property="og:title"
-            content={`Tag: ${title} - ${config.siteTitle}`}
-          />
-          <meta property="og:url" content={`${config.siteUrl}/tag/${slug}/`} />
-        </Helmet>
-      ) : (
-        <Helmet>
-          <title>{`Tag: ${title} - Page ${currentPage} - ${config.siteTitle}`}</title>
-          <meta
-            property="og:title"
-            content={`Tag: ${title} - Page ${currentPage} - ${config.siteTitle}`}
-          />
-          <meta property="og:url" content={`${config.siteUrl}/tag/${slug}/`} />
-        </Helmet>
-      )}
-
-      <Container>
-        <PageTitle small>
-          {numberOfPosts} Posts Tagged: &ldquo;
-          {title}
-          &rdquo;
-        </PageTitle>
-
-        <CardList>
-          {posts.slice(skip, limit * currentPage).map(post => (
-            <Card {...post} key={post.id} />
-          ))}
-        </CardList>
-      </Container>
-      <Pagination context={pageContext} />
-    </Layout>
+    <>
+      <Layout>
+        <SEO
+          title={`Tag: ${startCase(title)}`}
+          description={`Posts Tagged: ${startCase(title)}`}
+          image={ogImage}
+        />
+        <Container>
+          <PageTitle small>
+            {numberOfPosts} Posts Tagged: &ldquo;
+            {title}
+            &rdquo;
+          </PageTitle>
+          <CardList>
+            {posts.slice(skip, limit * humanPageNumber).map(post => (
+              <Card {...post} key={post.id} basePath={basePath} />
+            ))}
+          </CardList>
+        </Container>
+        <Pagination context={pageContext} />
+      </Layout>
+    </>
   )
 }
 
@@ -82,6 +73,9 @@ export const query = graphql`
           title
           fluid(maxWidth: 1800) {
             ...GatsbyContentfulFluid_withWebp_noBase64
+          }
+          ogimg: resize(width: 1800) {
+            src
           }
         }
         body {

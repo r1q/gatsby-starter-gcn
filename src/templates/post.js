@@ -1,7 +1,5 @@
 import React from 'react'
 import { graphql } from 'gatsby'
-import Helmet from 'react-helmet'
-import config from '../utils/siteConfig'
 import Layout from '../components/Layout'
 import Hero from '../components/Hero'
 import Container from '../components/Container'
@@ -14,35 +12,45 @@ import SEO from '../components/SEO'
 const PostTemplate = ({ data, pageContext }) => {
   const {
     title,
-    slug,
+    metaDescription,
     heroImage,
     body,
     publishDate,
     tags,
   } = data.contentfulPost
-  const postNode = data.contentfulPost
 
   const previous = pageContext.prev
   const next = pageContext.next
+  const { basePath } = pageContext
+
+  let ogImage
+  try {
+    ogImage = heroImage.ogimg.src
+  } catch (error) {
+    ogImage = null
+  }
 
   return (
     <Layout>
-      <Helmet>
-        <title>{`${title} - ${config.siteTitle}`}</title>
-      </Helmet>
-      <SEO pagePath={slug} postNode={postNode} postSEO />
-
+      <SEO
+        title={title}
+        description={
+          metaDescription
+            ? metaDescription.internal.content
+            : body.childMarkdownRemark.excerpt
+        }
+        image={ogImage}
+      />
       <Hero title={title} image={heroImage} height={'50vh'} />
-
       <Container>
-        {tags && <TagList tags={tags} />}
+        {tags && <TagList tags={tags} basePath={basePath} />}
         <PostDetails
           date={publishDate}
           timeToRead={body.childMarkdownRemark.timeToRead}
         />
         <PageBody body={body} />
       </Container>
-      <PostLinks previous={previous} next={next} />
+      <PostLinks previous={previous} next={next} basePath={basePath} />
     </Layout>
   )
 }
@@ -71,8 +79,6 @@ export const query = graphql`
         }
         ogimg: resize(width: 1800) {
           src
-          width
-          height
         }
       }
       body {

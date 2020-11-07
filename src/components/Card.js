@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+import styled from '@emotion/styled'
 import { Link } from 'gatsby'
 import Img from 'gatsby-image'
 
@@ -25,7 +25,7 @@ const Post = styled.li`
     flex-flow: column;
     height: 100%;
     width: 100%;
-    color: ${props => props.theme.colors.base};
+    color: ${props => props.theme.colors.text};
     text-decoration: none;
     .gatsby-image-wrapper {
       height: 0;
@@ -35,6 +35,11 @@ const Post = styled.li`
       }
     }
   }
+`
+
+const StyledImg = styled(Img)`
+  border-top-left-radius: 1px;
+  border-top-right-radius: 1px;
 `
 
 const Title = styled.h2`
@@ -59,31 +64,27 @@ const Excerpt = styled.p`
   line-height: 1.6;
 `
 
-const Card = ({
-  slug,
-  heroImage,
-  title,
-  publishDate,
-  body,
-  body: {
-    childMarkdownRemark: { timeToRead },
-  },
-  ...props
-}) => {
+const Card = ({ slug, heroImage, title, publishDate, body, ...props }) => {
   return (
-    <Post featured={props.featured}>
-      <Link to={`/${slug}/`}>
-        <Img fluid={heroImage.fluid} backgroundColor={'#eeeeee'} />
-        <Title>{title}</Title>
-        <Date>{publishDate}</Date>
-        <ReadingTime>{timeToRead} min read</ReadingTime>
-        <Excerpt
-          dangerouslySetInnerHTML={{
-            __html: body.childMarkdownRemark.excerpt,
-          }}
-        />
-      </Link>
-    </Post>
+    <>
+      {heroImage && body && (
+        <Post featured={props.featured}>
+          <Link to={`${props.basePath}/${slug}/`}>
+            <StyledImg fluid={heroImage.fluid} backgroundColor={'#eeeeee'} />
+            <Title>{title}</Title>
+            <Date>{publishDate}</Date>
+            <ReadingTime>
+              {body.childMarkdownRemark.timeToRead} min read
+            </ReadingTime>
+            <Excerpt
+              dangerouslySetInnerHTML={{
+                __html: body.childMarkdownRemark.excerpt,
+              }}
+            />
+          </Link>
+        </Post>
+      )}
+    </>
   )
 }
 
